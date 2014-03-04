@@ -466,6 +466,7 @@
               <Font name="Calibri" size="12" style="1"/>
             </Property>
             <Property name="rows" type="int" value="5"/>
+            <Property name="tabSize" type="int" value="4"/>
           </Properties>
         </Component>
       </SubComponents>
@@ -577,6 +578,9 @@
             </Property>
             <Property name="text" type="java.lang.String" value="AUTORIZAR"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton4ActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JLabel" name="lblCorte">
           <Properties>

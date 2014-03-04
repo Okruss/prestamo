@@ -7,6 +7,7 @@
 package org.okruss.prestamo.gui;
 
 import com.mysql.jdbc.Statement;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -24,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import org.okruss.prestamo.classes.ExcelExport;
 import org.okruss.prestamo.classes.conex;
 import org.okruss.prestamo.classes.dias;
 
@@ -35,6 +37,7 @@ public class prestamo extends javax.swing.JFrame {
     Statement stmt = null;
     conex cone = new conex();
     dias d = new dias();
+    String sfc="";
     DecimalFormat df2 = new DecimalFormat( "¤ #,###,###,##0.00" );
             // Cálculo del total del préstamo
         //Obtengo la fecha actual y la guardo en la variable 
@@ -285,6 +288,7 @@ public class prestamo extends javax.swing.JFrame {
         area.setColumns(20);
         area.setFont(new java.awt.Font("Calibri", 1, 12)); // NOI18N
         area.setRows(5);
+        area.setTabSize(4);
         jScrollPane3.setViewportView(area);
 
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -328,6 +332,11 @@ public class prestamo extends javax.swing.JFrame {
         jButton4.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         jButton4.setForeground(new java.awt.Color(255, 0, 0));
         jButton4.setText("AUTORIZAR");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
 
         lblCorte.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         lblCorte.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -1012,6 +1021,7 @@ public class prestamo extends javax.swing.JFrame {
         String fechaCorte="",fec="";
         feCorte.showDialog(null);
         fechaCorte=feCorte.getSelectedDate().get(Calendar.YEAR)+"-"+(feCorte.getSelectedDate().get(Calendar.MONTH)+1)+"-"+feCorte.getSelectedDate().get(Calendar.DAY_OF_MONTH);
+        sfc=fechaCorte;
         fec=feCorte.getSelectedDate().get(Calendar.DAY_OF_MONTH)+"-"+(feCorte.getSelectedDate().get(Calendar.MONTH)+1)+"-"+feCorte.getSelectedDate().get(Calendar.YEAR);
         SimpleDateFormat df1 = new SimpleDateFormat("dd-MM-yyyy");
         SimpleDateFormat sdf= new SimpleDateFormat("EEEE dd-MMMM-yyy");
@@ -1111,7 +1121,7 @@ public class prestamo extends javax.swing.JFrame {
             System.out.println("Deuda Total: "+tot1);
             modelo3.setValueAt((Object) df2.format(tot1),p,3);
             System.out.println("*********************");
-            total.setValue((Object)tot1);
+            //total.setValue((Object)tot1);
                 
             }
             if(nrow==1)//UN SOLO PRESTAMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
@@ -1178,7 +1188,7 @@ public class prestamo extends javax.swing.JFrame {
             System.out.println("Deuda Total: "+tot1);
             modelo3.setValueAt((Object) df2.format(tot1),p,3);
             System.out.println("*********************");
-            total.setValue((Object)tot1);
+            //total.setValue((Object)tot1);
             }
             
         }
@@ -1259,6 +1269,62 @@ public class prestamo extends javax.swing.JFrame {
     private void jTable1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseEntered
         // TODO add your handling code here:
     }//GEN-LAST:event_jTable1MouseEntered
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        // TODO add your handling code here:
+        int r =JOptionPane.showConfirmDialog(null,"¿CONFIRMA FECHA DE CORTE: "+sfc,"CREDITO DICE",JOptionPane.YES_NO_OPTION);
+        if(r==0)
+        {  
+        final JProgressBar barraProgreso = new JProgressBar(0, 1000);
+        final JDialog dialogoProgreso = new JDialog(this, "Procesando...");
+        dialogoProgreso.getContentPane().add(barraProgreso);
+        dialogoProgreso.pack();
+        dialogoProgreso.setLocationRelativeTo(null);
+        
+        final javax.swing.SwingWorker worker;
+        worker = new javax.swing.SwingWorker() {
+            
+            @Override
+            protected Void doInBackground() throws Exception {
+                dialogoProgreso.setVisible(true);
+                barraProgreso.setVisible(true);
+                barraProgreso.setIndeterminate(true);
+                DefaultTableModel modelo3 = (DefaultTableModel)jTable3.getModel();
+                for (int n=0;n<modelo3.getRowCount();n++)
+                {
+                
+                String cve="";
+                cve=jTable3.getValueAt(n,0).toString();
+                try
+                {
+                    stmt=(Statement) cone.conexion();
+                    stmt.getConnection();
+                    stmt.executeUpdate("use cnc");
+                    stmt.executeUpdate("update prestamo set CORTE='"+sfc+"' where CVEPROD='"+cve+"'");
+                }
+                catch(Exception e)
+                {
+                    JOptionPane.showMessageDialog(null,"Error:"+e.getMessage());
+                e.printStackTrace();
+                }
+                 }//fin del for
+                File path=null;
+                String nom="Corte_Prestamos_"+sfc;
+                ExcelExport xls = new ExcelExport(jTable3, path, nom);
+                xls.export();
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                barraProgreso.setIndeterminate(false);;
+                barraProgreso.setVisible(false);
+                dialogoProgreso.setVisible(false);
+            }
+        };
+        worker.execute();
+        }
+    }//GEN-LAST:event_jButton4ActionPerformed
 
     /**
      * @param args the command line arguments
