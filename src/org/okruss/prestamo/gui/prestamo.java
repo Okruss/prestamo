@@ -10,14 +10,20 @@ import com.mysql.jdbc.Statement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import org.okruss.prestamo.classes.conex;
 import org.okruss.prestamo.classes.dias;
 
@@ -30,6 +36,14 @@ public class prestamo extends javax.swing.JFrame {
     conex cone = new conex();
     dias d = new dias();
     DecimalFormat df2 = new DecimalFormat( "¤ #,###,###,##0.00" );
+            // Cálculo del total del préstamo
+        //Obtengo la fecha actual y la guardo en la variable 
+        //ho en el formato yyy-MM-dd
+        Calendar c = Calendar.getInstance();
+        String dia = Integer.toString(c.get(Calendar.DATE));
+        String mes = Integer.toString(c.get(Calendar.MONTH)+1);
+        String annio = Integer.toString(c.get(Calendar.YEAR));
+        String ho=annio+"-"+mes+"-"+dia;
     /**
      * Creates new form prestamo
      */
@@ -47,6 +61,8 @@ public class prestamo extends javax.swing.JFrame {
     private void initComponents() {
 
         feCorte = new datechooser.beans.DateChooserDialog();
+        popMenu = new javax.swing.JPopupMenu();
+        add_pago = new javax.swing.JMenuItem();
         jLabel1 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
         jPanel2 = new javax.swing.JPanel();
@@ -69,8 +85,23 @@ public class prestamo extends javax.swing.JFrame {
         jScrollPane3 = new javax.swing.JScrollPane();
         area = new javax.swing.JTextArea();
         jLabel7 = new javax.swing.JLabel();
+        jPanel4 = new javax.swing.JPanel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        jTable3 = new javax.swing.JTable();
+        jButton3 = new javax.swing.JButton();
+        jButton4 = new javax.swing.JButton();
+        lblCorte = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
 
         feCorte.setBehavior(datechooser.model.multiple.MultyModelBehavior.SELECT_SINGLE);
+
+        add_pago.setText("Agregar a Corte");
+        add_pago.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                add_pagoActionPerformed(evt);
+            }
+        });
+        popMenu.add(add_pago);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("PRESTAMO");
@@ -145,10 +176,23 @@ public class prestamo extends javax.swing.JFrame {
             new String [] {
                 "CLAVE", "LOTE", "TABLA", "PRODUCTOR", "SUPERFICIE"
             }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                true, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jTable1.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
+        jTable1.setComponentPopupMenu(popMenu);
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jTable1MouseClicked(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                jTable1MouseEntered(evt);
             }
         });
         jTable1.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -181,7 +225,15 @@ public class prestamo extends javax.swing.JFrame {
             new String [] {
                 "FECHA", "MONTO", "CLAVE PROD", "PRODUCTOR", "CATEGORÍA", "FECHA DE CORTE"
             }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         jScrollPane2.setViewportView(jTable2);
 
         jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -221,7 +273,7 @@ public class prestamo extends javax.swing.JFrame {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 254, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -231,10 +283,82 @@ public class prestamo extends javax.swing.JFrame {
         total.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("¤ #,##0.00 ¤¤"))));
 
         area.setColumns(20);
+        area.setFont(new java.awt.Font("Calibri", 1, 12)); // NOI18N
         area.setRows(5);
         jScrollPane3.setViewportView(area);
 
+        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel7.setText("TOTAL:");
+
+        jTable3.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "CLAVE", "PRODUCTOR", "PRESTAMO", "TOTAL"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jTable3.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable3MouseClicked(evt);
+            }
+        });
+        jTable3.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                jTable3KeyReleased(evt);
+            }
+        });
+        jScrollPane4.setViewportView(jTable3);
+
+        jButton3.setText("AGREGAR FECHA DE CORTE");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
+        jButton4.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        jButton4.setForeground(new java.awt.Color(255, 0, 0));
+        jButton4.setText("AUTORIZAR");
+
+        lblCorte.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        lblCorte.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblCorte.setText("FECHA DE CORTE: ");
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jButton3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
+                    .addComponent(lblCorte, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(lblCorte)
+                .addGap(5, 5, 5)
+                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+
+        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel8.setText("PARA CORTES");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -250,23 +374,30 @@ public class prestamo extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
-                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGap(169, 169, 169))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGap(1, 1, 1))
-                            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 266, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(total, javax.swing.GroupLayout.PREFERRED_SIZE, 204, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(2, 2, 2)
-                                .addComponent(total))
-                            .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -280,28 +411,33 @@ public class prestamo extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel4)
-                    .addComponent(jLabel6))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel6)
+                        .addComponent(jLabel8)))
                 .addGap(4, 4, 4)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane3)
-                        .addGap(8, 8, 8)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(total, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel7)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jScrollPane3)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(total, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel7)))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 169, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel5)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -409,6 +545,26 @@ public class prestamo extends javax.swing.JFrame {
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
         // TODO add your handling code here:
+        if(evt.getClickCount()==2)
+        {
+            DefaultTableModel modelo3 = (DefaultTableModel)jTable3.getModel();
+            DefaultTableModel modelo2 = (DefaultTableModel)jTable2.getModel();
+            
+         Object fila []= new Object[3];
+         Double totPres=0.0;
+                 
+         for(int a=0;a<modelo2.getRowCount();a++)
+         {
+             totPres=totPres+Double.parseDouble(jTable2.getValueAt(a, 1).toString());
+         }
+         
+         fila[0]=jTable1.getValueAt(jTable1.getSelectedRow(), 0);
+         fila[1]=jTable1.getValueAt(jTable1.getSelectedRow(), 3);
+         fila[2]=(Object) df2.format(totPres);
+         modelo3.addRow(fila);
+         
+        }
+        
         final JProgressBar barraProgreso = new JProgressBar(0, 1000);
         final JDialog dialogoProgreso = new JDialog(this, "Procesando...");
         dialogoProgreso.getContentPane().add(barraProgreso);
@@ -472,14 +628,7 @@ public class prestamo extends javax.swing.JFrame {
     }//GEN-LAST:event_jTable1MouseClicked
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // Cálculo del total del préstamo
-        //Obtengo la fecha actual y la guardo en la variable 
-        //ho en el formato yyy-MM-dd
-        Calendar c = Calendar.getInstance();
-        String dia = Integer.toString(c.get(Calendar.DATE));
-        String mes = Integer.toString(c.get(Calendar.MONTH)+1);
-        String annio = Integer.toString(c.get(Calendar.YEAR));
-        String ho=annio+"-"+mes+"-"+dia;
+
         //***************************************************
         //Muestro un dateChooser para que el usuario selecciones una
         //fecha de corte y la guardo en la variable "fechaCorte".
@@ -490,7 +639,7 @@ public class prestamo extends javax.swing.JFrame {
         //Obtengo la clave del productor seleccionado en la tabla
         String clave=jTable1.getValueAt(jTable1.getSelectedRow(),0).toString();
         //Limpia la área de texto donde muestro los detalles del préstamo.
-        area.setText("");
+        area.setText("\n");
         //Variable "nrow" que uso para derectar el número de prestamos
         int nrow=0;
         //Consulto la BD pidiento fecha y monto de prestamo de dicha clave
@@ -761,6 +910,356 @@ public class prestamo extends javax.swing.JFrame {
         worker.execute();
     }//GEN-LAST:event_jTable1KeyPressed
 
+    private void add_pagoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_add_pagoActionPerformed
+        // TODO add your handling code here:
+         DefaultTableModel modelo3 = (DefaultTableModel)jTable3.getModel();
+         DefaultTableModel modelo2 = (DefaultTableModel)jTable2.getModel();
+            
+         Object fila []= new Object[3];
+         Double totPres=0.0;
+                 
+         for(int a=0;a<modelo2.getRowCount();a++)
+         {
+             totPres=totPres+Double.parseDouble(jTable2.getValueAt(a, 1).toString());
+         }
+         
+         fila[0]=jTable1.getValueAt(jTable1.getSelectedRow(), 0);
+         fila[1]=jTable1.getValueAt(jTable1.getSelectedRow(), 3);
+         fila[2]=(Object) totPres;
+         modelo3.addRow(fila);
+         
+        
+    }//GEN-LAST:event_add_pagoActionPerformed
+
+    private void jTable3KeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTable3KeyReleased
+        // TODO add your handling code here:
+        DefaultTableModel modelo3 = (DefaultTableModel)jTable3.getModel();
+        int supr=evt.getKeyCode();
+        if(supr==127)
+        {
+            modelo3.removeRow(jTable3.getSelectedRow());
+            jTable3.changeSelection(jTable3.getSelectedRow()+1,0,true,true);
+        }
+        if(supr!=127)
+        {
+        final JProgressBar barraProgreso = new JProgressBar(0, 1000);
+        final JDialog dialogoProgreso = new JDialog(this, "Procesando...");
+        dialogoProgreso.getContentPane().add(barraProgreso);
+        dialogoProgreso.pack();
+        dialogoProgreso.setLocationRelativeTo(null);
+        
+        final javax.swing.SwingWorker worker;
+        worker = new javax.swing.SwingWorker() {
+            
+            @Override
+            protected Void doInBackground() throws Exception {
+//                dialogoProgreso.setVisible(true);
+//                barraProgreso.setVisible(true);
+//                barraProgreso.setIndeterminate(true);
+                   try
+        {
+            
+            String cve="";
+            cve=jTable3.getValueAt(jTable3.getSelectedRow(),0).toString();
+            stmt=(Statement) cone.conexion();
+            stmt.getConnection();
+            stmt.executeUpdate("use cnc");
+            ResultSet rs=stmt.executeQuery("Select * from prestamo where cveprod= '"+cve+"' order by fecha asc");
+
+            ResultSetMetaData mD = rs.getMetaData();
+            int ncol=mD.getColumnCount();
+            Object label [] = new Object [ncol];
+            for (int i=0;i<ncol;i++)
+            {
+                label[i]=mD.getColumnLabel(i+1);
+            }
+
+            DefaultTableModel modelo = (DefaultTableModel) jTable2.getModel();
+            modelo.setRowCount(0);
+            //modelo.setColumnIdentifiers(label);
+            while(rs.next())
+            {
+                Object [] fila = new Object [ncol];
+                for (int i=0;i<ncol;i++)
+                {
+                    fila[i]=rs.getObject(i+1);
+                }
+                modelo.addRow(fila);
+            }
+        }
+        catch (Exception e)
+        {
+            JOptionPane.showMessageDialog(null,"Error:"+e.getMessage());
+            e.printStackTrace();
+        }          
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                barraProgreso.setIndeterminate(false);;
+                barraProgreso.setVisible(false);
+                dialogoProgreso.setVisible(false);
+            }
+        };
+        worker.execute();
+        }
+    }//GEN-LAST:event_jTable3KeyReleased
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        // TODO add your handling code here:
+        DefaultTableModel modelo3 = (DefaultTableModel)jTable3.getModel();
+        String fechaCorte="",fec="";
+        feCorte.showDialog(null);
+        fechaCorte=feCorte.getSelectedDate().get(Calendar.YEAR)+"-"+(feCorte.getSelectedDate().get(Calendar.MONTH)+1)+"-"+feCorte.getSelectedDate().get(Calendar.DAY_OF_MONTH);
+        fec=feCorte.getSelectedDate().get(Calendar.DAY_OF_MONTH)+"-"+(feCorte.getSelectedDate().get(Calendar.MONTH)+1)+"-"+feCorte.getSelectedDate().get(Calendar.YEAR);
+        SimpleDateFormat df1 = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat sdf= new SimpleDateFormat("EEEE dd-MMMM-yyy");
+        try {
+            Date f=df1.parse(fec);
+            lblCorte.setText("FECHA DE CORTE: "+sdf.format(f));
+        } catch (ParseException ex) {
+            Logger.getLogger(prestamo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+         for (int p=0; p<modelo3.getRowCount();p++)
+         {
+        //******************************************************
+        //Obtengo la clave del productor seleccionado en la tabla
+        String clave=jTable3.getValueAt(p, 0).toString();
+        //Variable "nrow" que uso para derectar el número de prestamos
+        int nrow=0;
+        //Consulto la BD pidiento fecha y monto de prestamo de dicha clave
+        try
+        {
+            stmt=(Statement) cone.conexion();
+            stmt.getConnection();
+            stmt.executeUpdate("use cnc");
+            ResultSet rs=stmt.executeQuery("Select fecha,mont from prestamo where cveprod='"+clave+"'");
+            //Cuento los registros generados por la consulta
+            while(rs.next())
+            {
+                nrow++;
+            }
+            if(nrow>1)//SI HAY MAS DE UN PRESTAMOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+            {
+            //agrego al área de texto el número de prestamos detectados.
+            area.append("\t"+nrow+" >>PRÉSTAMOS DETECTADOS<<");
+            area.append("\n");
+            //creo un Formato de FEchas para manejar las fecha.
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            //Creo una variable tipo Date "hoy# y parseo el String con la fecha de hoy
+            //y la fecha de corte que selecciono el usuario.
+            Date fc=df.parse(fechaCorte);
+            Date hoy = df.parse(ho);
+            //Creo un vector para guardar fechas, montos y días trancurridos entre préstamos.
+            Date fechas [] = new Date[nrow];
+            Double montos [] = new Double[nrow];
+            int dias [] = new int[nrow];
+            //Consutlo a la BD pidiendo los datos fecha y monto para guardarlos en el vector.
+            ResultSet rs1=stmt.executeQuery("Select fecha,mont from prestamo where cveprod='"+clave+"' order by fecha asc");
+            int x=0;
+            while(rs1.next())
+            {
+                fechas[x]=(Date)df.parse(rs1.getString(1));
+                montos[x]=Double.parseDouble(rs1.getString(2));
+                x++;
+            }
+            //Recorro el vector de fechas e imprimo datos de los prestamos
+            //Calculo los días transcurridos entre préstamos y los guardo
+            //en el vector de días.
+            for (int y=0;y<fechas.length;y++)
+            {
+                if(y<(fechas.length)-1)
+                {
+                    dias[y]=(d.getDias(fechas[y], fechas[y+1]));
+                }
+                //si es el último préstamo detectado o el único prestamo, entonces
+                //calculamos los días con la fecha de corte seleccionada por el usuario.
+                else
+                {
+                    dias[y]=(d.getDias(fechas[y], fc)+1);
+                }
+            }
+            //Cálculamos el interes generado por los préstamos según su día.
+            System.out.println("*****Deuda Total*****");
+            double tot=0;//Variable temporal donde almaceno y calculo el interes.
+            double tot1=0;//Variable donde guardo el total de la deuda.
+            double tot2=0;//Variable donde guardo el total de la deduda por préstamo.
+            for(int a=0;a<fechas.length;a++)
+            {
+                tot=montos[a]+tot1;
+                tot2=montos[a];
+                for(int b=0;b<dias[a];b++)
+                {
+                    tot=tot+(tot*.000483871);
+                    tot2=tot2+(tot2*.000483871);
+                }
+                tot1=tot;
+                System.out.println("Fecha: "+df.format(fechas[a])+" Monto: "+montos[a]+" Días: "+dias[a]+" Monto Calculado: "+df2.format(tot2)+" Interes= "+df2.format((tot2-montos[a])));
+                area.append("ID: "+(a+1));
+                area.append("\n");
+                area.append("FEHA DE AUT:"+df.format(fechas[a]));
+                area.append("\n");;
+                area.append("MONTO: "+df2.format(montos[a])+"\n");
+                area.append("DÍAS: "+((dias[a])+1)+"\n");
+                area.append("MONTO REAL: "+df2.format(tot2)+"\n");
+                area.append("******************\n");
+                
+            }
+            System.out.println("Deuda Total: "+tot1);
+            modelo3.setValueAt((Object) df2.format(tot1),p,3);
+            System.out.println("*********************");
+            total.setValue((Object)tot1);
+                
+            }
+            if(nrow==1)//UN SOLO PRESTAMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+            {
+                //agrego al área de texto el número de prestamos detectados.
+            area.append("\t"+nrow+" >>PRÉSTAMO DETECTADO<<");
+            area.append("\n");
+            //creo un Formato de FEchas para manejar las fecha.
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            //Creo una variable tipo Date "hoy# y parseo el String con la fecha de hoy
+            //y la fecha de corte que selecciono el usuario.
+            Date fc=df.parse(fechaCorte);
+            Date hoy = df.parse(ho);
+            //Creo un vector para guardar fechas, montos y días trancurridos entre préstamos.
+            Date fechas [] = new Date[nrow];
+            Double montos [] = new Double[nrow];
+            int dias [] = new int[nrow];
+            //Consutlo a la BD pidiendo los datos fecha y monto para guardarlos en el vector.
+            ResultSet rs1=stmt.executeQuery("Select fecha,mont from prestamo where cveprod='"+clave+"' order by fecha asc");
+            int x=0;
+            while(rs1.next())
+            {
+                fechas[x]=(Date)df.parse(rs1.getString(1));
+//                System.out.println(df.format(fechas[x]));
+                montos[x]=Double.parseDouble(rs1.getString(2));
+                x++;
+            }
+            //Recorro el vector de fechas e imprimo datos de los prestamos
+            //Calculo los días transcurridos entre préstamos y los guardo
+            //en el vector de días.
+            for (int y=0;y<fechas.length;y++)
+            {
+                //calculamos los días con la fecha de corte seleccionada por el usuario.
+                dias[y]=(d.getDias(fechas[y], fc)+1);
+            }
+            //***************************************************
+            //Cálculamos el interes generado por los préstamos según su día.
+            System.out.println("*****Deuda Total*****");
+            double tot=0;//Variable temporal donde almaceno y calculo el interes.
+            double tot1=0;//Variable donde guardo el total de la deuda.
+            double tot2=0;//Variable donde guardo el total de la deduda por préstamo.
+            for(int a=0;a<fechas.length;a++)
+            {
+                tot=montos[a]+tot1;
+                tot2=montos[a];
+                for(int b=0;b<dias[a];b++)
+                {
+                    tot=tot+(tot*.000483871);   
+                    tot2=tot2+(tot2*.000483871);
+                }
+                tot1=tot;
+                System.out.println("Fecha: "+df.format(fechas[a])+" Monto: "+montos[a]+" Días: "+dias[a]+" Monto Calculado: "+df2.format(tot2)+" Interes= "+df2.format((tot2-montos[a])));
+                area.append("ID: "+(a+1));
+                area.append("\n");
+                area.append("FEHA DE AUT:"+df.format(fechas[a]));
+                area.append("\n");;
+                area.append("MONTO: "+df2.format(montos[a])+"\n");
+                area.append("DÍAS: "+dias[a]+"\n");
+                area.append("MONTO REAL: "+df2.format(tot2)+"\n");
+                
+                area.append("************************************\n");
+                
+            }
+            System.out.println("Deuda Total: "+tot1);
+            modelo3.setValueAt((Object) df2.format(tot1),p,3);
+            System.out.println("*********************");
+            total.setValue((Object)tot1);
+            }
+            
+        }
+        catch (Exception e)
+        {
+            JOptionPane.showMessageDialog(null,"Error:"+e.getMessage());
+            e.printStackTrace();
+        }        
+        System.out.println("P= "+p);
+         }
+         
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable3MouseClicked
+        // TODO add your handling code here:
+        final JProgressBar barraProgreso = new JProgressBar(0, 1000);
+        final JDialog dialogoProgreso = new JDialog(this, "Procesando...");
+        dialogoProgreso.getContentPane().add(barraProgreso);
+        dialogoProgreso.pack();
+        dialogoProgreso.setLocationRelativeTo(null);
+        
+        final javax.swing.SwingWorker worker;
+        worker = new javax.swing.SwingWorker() {
+            
+            @Override
+            protected Void doInBackground() throws Exception {
+//                dialogoProgreso.setVisible(true);
+//                barraProgreso.setVisible(true);
+//                barraProgreso.setIndeterminate(true);
+                   try
+        {
+            String cve="";
+            cve=jTable3.getValueAt(jTable3.getSelectedRow(),0).toString();
+            stmt=(Statement) cone.conexion();
+            stmt.getConnection();
+            stmt.executeUpdate("use cnc");
+            ResultSet rs=stmt.executeQuery("Select * from prestamo where cveprod= '"+cve+"' order by fecha asc");
+
+            ResultSetMetaData mD = rs.getMetaData();
+            int ncol=mD.getColumnCount();
+            Object label [] = new Object [ncol];
+            for (int i=0;i<ncol;i++)
+            {
+                label[i]=mD.getColumnLabel(i+1);
+            }
+
+            DefaultTableModel modelo = (DefaultTableModel) jTable2.getModel();
+            modelo.setRowCount(0);
+            //modelo.setColumnIdentifiers(label);
+            while(rs.next())
+            {
+                Object [] fila = new Object [ncol];
+                for (int i=0;i<ncol;i++)
+                {
+                    fila[i]=rs.getObject(i+1);
+                }
+                modelo.addRow(fila);
+            }
+        }
+        catch (Exception e)
+        {
+            JOptionPane.showMessageDialog(null,"Error:"+e.getMessage());
+            e.printStackTrace();
+        }          
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                barraProgreso.setIndeterminate(false);;
+                barraProgreso.setVisible(false);
+                dialogoProgreso.setVisible(false);
+            }
+        };
+        worker.execute();
+    }//GEN-LAST:event_jTable3MouseClicked
+
+    private void jTable1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseEntered
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTable1MouseEntered
+
     /**
      * @param args the command line arguments
      */
@@ -800,10 +1299,13 @@ public class prestamo extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem add_pago;
     private javax.swing.JTextArea area;
     private datechooser.beans.DateChooserDialog feCorte;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -811,17 +1313,23 @@ public class prestamo extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
+    private javax.swing.JTable jTable3;
     private javax.swing.JTextField jtClave;
     private javax.swing.JTextField jtProd;
+    private javax.swing.JLabel lblCorte;
+    private javax.swing.JPopupMenu popMenu;
     private javax.swing.JFormattedTextField total;
     // End of variables declaration//GEN-END:variables
 }
